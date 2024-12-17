@@ -1,0 +1,144 @@
+Привет это начало создание программы для ведения подчсета времени потраченного на какую-то задачу.
+Я пока понятия не имею что да как, это просто пет проект. 
+Я пока пишу программы на уровне джуна-инвалида. Знаю питон(ну это база блин), еще понимаю js,css,html,также пишу скрипты на bashe 
+Приложение скорее будет для систем UNIX,  далее мне нужно будет его собрать в exeшку и можно добавить gui
+Оно будет работать локально с плоским бд и пока без интернета и сервер-клиентской поддержки 
+Я вижу ее максимально простой и понятной
+День когда родился Only Tick Tally 06/12/2024
+
+
+
+
+#у меня пока есть файл import sqlite3
+
+# Создание соединения с базой данных
+conn = sqlite3.connect('tick.db', check_same_thread=False)
+cursor = conn.cursor()
+
+# Создание таблицы, если она не существует
+cursor.execute('''CREATE TABLE IF NOT EXISTS users
+               (id INTEGER PRIMARY KEY, user_name TEXT, task_name TEXT)''')
+conn.commit()
+print('Таблица создана успешно!')
+
+
+
+
+# Функция для вставки пользователя
+def user_name_insert(name, task_name):
+    try:
+        cursor.execute("INSERT INTO users (user_name, task_name) VALUES (?, ?)", (name, task_name))
+        conn.commit()
+        print("Запись успешно добавлена!")
+    except sqlite3.Error as e:
+        print(f"Ошибка при добавлении пользователя: {e}")
+
+
+
+
+# Функция для выборки пользователей
+def user_name_select():
+    try:
+        cursor.execute("SELECT * FROM users")
+        rows = cursor.fetchall()
+        if rows:  # Если есть данные
+            for row in rows:
+                print(f"User ID: {row[0]}, User Name: {row[1]}, Task Name: {row[2]}")
+        else:
+            print("Нет пользователей в базе данных.")
+    except sqlite3.Error as e:
+        print(f"Ошибка при выборке данных: {e}")
+
+
+
+# Функция для выборки конкретных задач юзера 
+def user_name_select_task(user_name):
+    try:
+        # Выбираем только задачи пользователя
+        # cursor.execute(f"SELECT * FROM users {(user_name)}") 
+
+        cursor.execute("SELECT task_name FROM users WHERE user_name = ?", (user_name,))
+        rows = cursor.fetchall()
+        
+        if rows:  # Если найдены задачи
+            print(f"Задачи пользователя {user_name}:")
+            for idx, row in enumerate(rows, start=1):
+                print(f"{idx}. {row[0]}")  # Каждая задача выводится с номером
+        else:
+            print(f"Пользователь '{user_name}' не найден или у него нет задач.")
+    except sqlite3.Error as e:
+        print(f"Ошибка при выборке задач: {e}") и второй файл import threading
+from colorama import init, Fore
+import random
+from db_func_create import *
+
+from loop import *
+from frame import texts
+
+# Флаг для управления потоком анимации
+running_event = threading.Event()
+running_event.set()
+
+# Функция для обработки ввода
+def handle_input():
+    while running_event.is_set():
+        user_input = input(Fore.GREEN + "Введите команду > ")
+        
+        if user_input == "-h" or user_input == "--help":
+            print(Fore.YELLOW + "Команды:\n -n : создать новую запись\n list : показать все записи\n exit : выйти из программы")
+        
+        elif user_input == "list":
+            print(Fore.CYAN + "Список всех записей:")
+            user_name_select()
+        
+        elif user_input == "exit":
+            print("Завершаем программу...")
+            running_event.clear()  # Останавливаем программу
+            break
+        
+        elif user_input == "-n":
+            name = input("Введите имя пользователя: ")
+            task_name = input("Введите название задачи: ")
+            user_name_insert(name, task_name)
+
+        elif user_input == "s":
+            user_name = input("Введите имя пользователя: ").strip()
+            user_name_select_task(user_name)
+        
+
+        else:
+            print(Fore.RED + f"Неизвестная команда: {user_input}")
+
+
+
+
+
+
+
+# Основная функция программы
+def main():
+    init(autoreset=True)  # Инициализация colorama
+    print(Fore.CYAN + "\n______________________Добро пожаловать в программу_____________________")
+    
+    # Выбор случайного текста для анимации
+    random_text = random.choice(texts)
+    print(random_text)
+
+    print(Fore.MAGENTA + "Привет, я простой помощник!")
+
+    # Запускаем потоки
+    animation_thread = threading.Thread(target=loop_text)
+    input_thread = threading.Thread(target=handle_input)
+
+    animation_thread.start()
+    input_thread.start()
+
+    input_thread.join()
+    running_event.clear()  # Останавливаем анимацию
+    animation_thread.join()
+
+    print("\nПрограмма завершена.")
+
+if __name__ == "__main__":
+    main()
+и я хочц созалть прилодение на подобии only tick tally чтобы можно было засекат время под определеную задачу тоесть рпограмма можно запуить напимер  - n и типа название иммя юзера и старт  потом будет заускаться секундомр и начанется отчт оремени и стаииктика пока идет отчет буедт играться и тацыват какая нибудь девочка это после сборки exe как тебе моя идея у программы будет возможноть переклбчаться междду задачами и зарускат однорвемеено нескольео задач
