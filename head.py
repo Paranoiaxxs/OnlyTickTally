@@ -30,7 +30,15 @@ def handle_input():
         elif user_input == "-n":
             name = input("Введите имя пользователя: ")
             task_name = input("Введите название задачи: ")
-            user_name_insert(name, task_name)
+            stop_event = threading.Event()
+            stop_event.set()
+            # запуск таймера в потоке
+            print("Начался запуск таймера")
+            
+            #save resuts timer in bd
+            elapsed_time = timer_task(task_name)
+            user_name_insert(name, task_name, elapsed_time)
+
 
         elif user_input == "s":
             user_name = input("Введите имя пользователя: ").strip()
