@@ -33,5 +33,6 @@ venv/            # Виртуальное окружение Python
 *.pyc            # Компилированные файлы Python
 *.pyo            # Оптимизированные файлы Python
 
-tick.db
+/tick.db
+
 
