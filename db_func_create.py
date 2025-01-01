@@ -1,6 +1,7 @@
 import sqlite3
 import time
 from colorama import init, Fore
+from pynput import keyboard
 
 
 # Конект соединения с базой данных
@@ -26,15 +27,47 @@ def user_name_insert(name, task_name, time_task):
         print(f"Ошибка при добавлении пользователя: {e}")
 
 
-
-# Функция таймера
 def timer_task(task_name):
-    start_time = time.time()
-    print(Fore.YELLOW + f"Таймер для задачи '{task_name}' запущен. Нажмите 'Enter', чтобы остановить.")
-    input(Fore.GREEN + "Остановить задачу и завершить таймер? > ")
-    elapsed_time = round(time.time() - start_time)
-    print(Fore.CYAN + f"Задача '{task_name}' завершена! Время: {elapsed_time} секунд.")
-    return elapsed_time
+    start_time = time.time()  # время начала работы таймера
+    paused_time = 0  # Общее время паузы
+    is_paused = False
+    pause_start = None  # Время начала текущей паузы
+
+    def on_press(key):
+        nonlocal is_paused, paused_time, pause_start, running
+        try:
+            if hasattr(key, 'char') and key.char == 'b':  # задачу завершаем 
+                # Если таймер на паузе, добавляем время текущей паузы
+                if is_paused:
+                    paused_time += time.time() - pause_start
+                elapsed_time = round(time.time() - start_time - paused_time)  # Итоговое время без учёта пауз
+                print(Fore.CYAN + f"\nЗадача '{task_name}' завершена! Время: {elapsed_time} секунд.")
+                running = False
+                return False  # Завершает слушатель
+            elif key == keyboard.Key.enter:  # Пауза/продолжение
+                if is_paused:  # Если таймер был на паузе
+                    is_paused = False
+                    paused_time += time.time() - pause_start  # увеличиваем общее время паузы
+                    pause_start = None  # Сбрасываем время начала паузы
+                    print(Fore.GREEN + "Таймер продолжен.")
+                else:  # Если таймер работает
+                    is_paused = True
+                    pause_start = time.time()  # Фиксируем начало паузы
+                    print(Fore.MAGENTA + "\nТаймер на паузе. Нажмите 'Enter' для продолжения.")
+        except AttributeError:
+            pass
+
+    print(Fore.YELLOW + f"Таймер для задачи '{task_name}' запущен.")
+    print(Fore.GREEN + "Нажмите 'Enter' для паузы или 'b' для завершения задачи.")
+    running = True
+
+    with keyboard.Listener(on_press=on_press) as listener:
+        while running:
+            if not is_paused:  # Таймер продолжает работать только если не на паузе
+                time.sleep(0.1)  # Уменьшаем нагрузку на процессор
+        listener.join()
+
+    return round(time.time() - start_time - paused_time)
 
 
 # Функция для выборки пользователей
